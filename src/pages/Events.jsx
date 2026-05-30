@@ -1,0 +1,226 @@
+import React, { useState } from 'react';
+
+const Events = () => {
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [showNewsDetail, setShowNewsDetail] = useState(false);
+  const [registeredIds, setRegisteredIds] = useState([]); // Menampung ID event yang diikuti
+  const [reminderIds, setRemindersIds] = useState([]); // Menampung ID event yang diingatkan
+
+  const upcomingEvents = [
+    {
+      id: 1,
+      title: 'Deteksi Dini Masalah Kulit dengan AI Vision',
+      desc: 'Webinar eksklusif bersama Dr. Sarah Wijaya mengenai perkembangan teknologi AI Vision untuk pemantauan kesehatan kulit mandiri.',
+      date: '25 Jan 2026',
+      time: '10:00 - 12:00 WIB',
+      type: 'Webinar',
+      image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=400',
+      icon: 'videocam'
+    },
+    {
+      id: 2,
+      title: 'Workshop: Manajemen Stress & Burnout',
+      desc: 'Sesi interaktif praktis untuk mengelola beban kerja dan menjaga kesehatan mental di lingkungan profesional yang kompetitif.',
+      date: '28 Jan 2026',
+      time: '14:00 - 16:00 WIB',
+      type: 'Workshop',
+      image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=400',
+      icon: 'psychology'
+    }
+  ];
+
+  // FUNGSI HENDLER
+  const toggleFollow = (id) => {
+    if (registeredIds.includes(id)) {
+      setRegisteredIds(registeredIds.filter(item => item !== id));
+    } else {
+      setRegisteredIds([...registeredIds, id]);
+      alert("Pendaftaran Berhasil! Link akses dikirim ke email Anda.");
+    }
+  };
+
+  const toggleReminder = (id) => {
+    if (reminderIds.includes(id)) {
+      setRemindersIds(reminderIds.filter(item => item !== id));
+    } else {
+      setRemindersIds([...reminderIds, id]);
+      alert("Pengingat Aktif! Kami akan memberi notifikasi sebelum acara dimulai.");
+    }
+  };
+
+  return (
+    <div className="animate-in fade-in duration-700 pb-20 relative">
+
+      {/* ===== MODAL KALENDER ===== */}
+      {showCalendar && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowCalendar(false)}></div>
+          <div className="bg-white rounded-[40px] p-10 max-w-md w-full relative z-10 animate-in zoom-in-95 shadow-2xl">
+            <h3 className="text-2xl font-bold mb-6 text-on-surface">Kalender Event</h3>
+            <div className="bg-slate-50 p-6 rounded-[32px] border border-slate-100">
+               <div className="flex justify-between mb-4 font-bold text-xs text-primary uppercase">
+                 <span>Januari 2026</span>
+                 <div className="flex gap-2">
+                    <span className="material-symbols-outlined text-sm cursor-pointer">chevron_left</span>
+                    <span className="material-symbols-outlined text-sm cursor-pointer">chevron_right</span>
+                 </div>
+               </div>
+               <div className="grid grid-cols-7 gap-2 text-center text-[10px] font-bold text-slate-400 mb-2">
+                 <span>S</span><span>S</span><span>R</span><span>K</span><span>J</span><span>S</span><span>M</span>
+               </div>
+               <div className="grid grid-cols-7 gap-2">
+                 {[...Array(31)].map((_, i) => (
+                   <div key={i} className={`aspect-square flex items-center justify-center rounded-lg text-xs font-medium cursor-pointer transition-all ${[25, 28].includes(i+1) ? 'bg-primary text-white shadow-lg' : 'hover:bg-primary/10'}`}>
+                     {i + 1}
+                   </div>
+                 ))}
+               </div>
+            </div>
+            <button onClick={() => setShowCalendar(false)} className="w-full mt-8 bg-primary text-white py-4 rounded-2xl font-bold">Tutup</button>
+          </div>
+        </div>
+      )}
+
+      {/* ===== MODAL BACA SELENGKAPNYA (BERITA UTAMA) ===== */}
+      {showNewsDetail && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setShowNewsDetail(false)}></div>
+          <div className="bg-white rounded-[40px] max-w-2xl w-full max-h-[85vh] overflow-y-auto relative z-10 animate-in slide-in-from-bottom-10 shadow-2xl custom-scrollbar">
+             <img src="https://plus.unsplash.com/premium_photo-1670981098417-dac28d081825?w=500&auto=format&fit=crop&q=60" className="w-full h-64 object-cover" alt="" />
+             <div className="p-10">
+                <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-[10px] font-bold uppercase mb-4 inline-block">Sains & Riset</span>
+                <h3 className="text-3xl font-bold mb-6">Evolusi AI dalam Deteksi Kanker Kulit</h3>
+                <p className="text-on-surface-variant leading-relaxed mb-6">
+                  Teknologi Deep Learning yang dikembangkan oleh tim riset Dermind kini telah mencapai tingkat akurasi 94% dalam mengenali sel abnormal pada lapisan epidermis. Penemuan ini dipublikasikan dalam Journal of Clinical Dermatology bulan ini. Dengan pembaruan ini, pengguna aplikasi dapat merasakan deteksi yang lebih presisi hanya dengan satu unggahan foto...
+                </p>
+                <button onClick={() => setShowNewsDetail(false)} className="bg-slate-100 px-8 py-3 rounded-xl font-bold text-slate-500">Tutup Artikel</button>
+             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Header Halaman */}
+      <header className="mb-8">
+        <h2 className="text-3xl font-manrope font-bold text-on-surface">Events & Berita</h2>
+        <p className="text-on-surface-variant mt-1">Temukan kegiatan medis terbaru dan pantau perkembangan inovasi kesehatan kami.</p>
+      </header>
+
+      {/* SECTION ATAS */}
+      <div className="grid grid-cols-12 gap-6 mb-12">
+        <div className="col-span-12 lg:col-span-8 bg-white rounded-[32px] overflow-hidden border border-slate-100 shadow-sm relative group h-[400px]">
+          <img 
+            src="https://plus.unsplash.com/premium_photo-1670981098417-dac28d081825?w=500&auto=format&fit=crop&q=60" 
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 opacity-90" 
+            alt="Feature" 
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent p-10 flex flex-col justify-end">
+            <span className="bg-[#4fbdba] text-white px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest w-fit mb-4">Laporan Terbaru</span>
+            <h3 className="text-3xl font-bold text-white mb-4 leading-tight max-w-xl">
+              Evolusi di dalam Deteksi Dini Kanker Kulit: Apa yang Harus Anda Ketahui
+            </h3>
+            <p className="text-white/70 text-sm max-w-lg mb-6">
+              Bagaimana teknologi deep learning membantu dokter mendiagnosis melanoma lebih cepat dari sebelumnya.
+            </p>
+            <button 
+                onClick={() => setShowNewsDetail(true)}
+                className="text-[#4fbdba] font-bold text-sm flex items-center gap-2 hover:gap-4 transition-all"
+            >
+              Baca Selengkapnya <span className="material-symbols-outlined text-sm">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
+          <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm flex-1 text-on-surface">
+            <h4 className="font-bold text-sm">Trend Analisis</h4>
+            <div className="flex items-end gap-2 h-20 mb-4 mt-4">
+              {[30, 45, 60, 40, 80, 95].map((h, i) => (
+                <div key={i} className="flex-1 bg-primary/10 rounded-t-md hover:bg-primary/30 transition-all" style={{height: `${h}%`}}></div>
+              ))}
+            </div>
+            <p className="text-[11px] text-on-surface-variant leading-relaxed">Penggunaan fitur AI Skin Detection naik 15% pada minggu ini.</p>
+          </div>
+
+          <div className="bg-[#1a2b2b] rounded-[32px] p-8 border border-white/5 shadow-sm flex-1 text-white relative overflow-hidden">
+             <div className="bg-[#4fbdba]/20 p-2 rounded-xl w-fit mb-4"><span className="material-symbols-outlined text-[#4fbdba]">notifications_active</span></div>
+             <h4 className="font-bold text-sm mb-2 uppercase tracking-wide text-[#4fbdba]">Update AI Profil</h4>
+             <p className="text-xs text-white/60 leading-relaxed">Kami telah memperbarui algoritma deteksi untuk akurasi yang lebih tinggi.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION TENGAH: Jadwal webinar & workshop */}
+      <div className="mb-12">
+        <div className="flex justify-between items-center mb-10">
+          <h3 className="text-2xl font-manrope font-bold text-on-surface">Jadwal Webinar & Workshop</h3>
+          <button 
+            onClick={() => setShowCalendar(true)}
+            className="text-primary text-xs font-bold uppercase tracking-widest hover:underline"
+          >
+            Lihat Kalender
+          </button>
+        </div>
+
+        <div className="relative space-y-10 pl-10">
+          <div className="absolute left-[20px] top-4 bottom-4 w-0.5 bg-slate-100"></div>
+
+          {upcomingEvents.map((event) => (
+            <div key={event.id} className="relative group">
+              {/* DOT TIMELINE BERUBAH WARNA JIKA TERDAFTAR */}
+              <div className={`absolute -left-[30px] top-1/2 -translate-y-1/2 w-[22px] h-[22px] bg-white border-4 rounded-full z-10 shadow-sm transition-all ${registeredIds.includes(event.id) ? 'border-green-500 bg-green-500' : 'border-primary'}`}></div>
+              
+              <div className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm hover:border-primary/20 transition-all flex flex-col md:flex-row gap-8 items-center">
+                <div className="w-full md:w-48 h-32 rounded-2xl overflow-hidden bg-slate-50 flex-shrink-0">
+                  <img src={event.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="event" />
+                </div>
+                
+                <div className="flex-1">
+                  <div className="flex flex-wrap gap-4 mb-3">
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                      <span className="material-symbols-outlined text-sm">calendar_today</span> {event.date}
+                    </span>
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                      <span className="material-symbols-outlined text-sm">schedule</span> {event.time}
+                    </span>
+                  </div>
+                  <h4 className="text-xl font-bold text-on-surface mb-2 group-hover:text-primary transition-colors">{event.title}</h4>
+                  <p className="text-[11px] text-on-surface-variant leading-relaxed line-clamp-2 max-w-2xl">{event.desc}</p>
+                </div>
+
+                <div className="flex flex-col gap-2 w-full md:w-fit">
+                  {/* TOMBOL IKUTI SEKARANG */}
+                  <button 
+                    onClick={() => toggleFollow(event.id)}
+                    className={`px-8 py-3 rounded-2xl font-bold text-xs shadow-lg transition-all whitespace-nowrap ${registeredIds.includes(event.id) ? 'bg-green-500 text-white shadow-green-100' : 'bg-primary text-white shadow-primary/20'}`}
+                  >
+                    {registeredIds.includes(event.id) ? 'Sudah Terdaftar' : 'Ikuti Sekarang'}
+                  </button>
+
+                  {/* TOMBOL INGATKAN SAYA */}
+                  <button 
+                    onClick={() => toggleReminder(event.id)}
+                    className={`px-8 py-3 rounded-2xl font-bold text-xs border transition-all ${reminderIds.includes(event.id) ? 'bg-orange-50 border-orange-200 text-orange-500' : 'bg-white border-slate-100 text-slate-400 hover:text-primary hover:border-primary'}`}
+                  >
+                    {reminderIds.includes(event.id) ? 'Pengingat Aktif' : 'Ingatkan Saya'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* SECTION BAWAH: Newsletter */}
+      <div className="bg-slate-50 border border-slate-100 rounded-[40px] p-12 text-center relative overflow-hidden">
+        <h3 className="text-3xl font-manrope font-bold text-on-surface mb-4">Jangan Lewatkan Update Penting</h3>
+        <p className="text-on-surface-variant max-w-lg mx-auto mb-10 text-sm leading-relaxed font-inter">Dapatkan notifikasi jadwal webinar kesehatan dan berita medis terbaru langsung di email Anda.</p>
+        <div className="flex flex-col md:flex-row max-w-md mx-auto gap-3 relative z-10">
+          <input type="email" placeholder="Alamat Email Anda" className="flex-1 bg-white border border-slate-200 rounded-2xl px-6 py-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all" />
+          <button className="bg-[#4fbdba] text-white px-8 py-4 rounded-2xl font-bold text-sm shadow-lg shadow-[#4fbdba]/20 hover:scale-105 transition-transform">Berlangganan</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Events;
