@@ -1,0 +1,17 @@
+CREATE TABLE articles (
+    id SERIAL PRIMARY KEY,
+
+    title VARCHAR(255) NOT NULL,
+
+    slug VARCHAR(255) UNIQUE,
+
+    content TEXT NOT NULL,
+
+    image TEXT,
+
+    author_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
