@@ -13,6 +13,19 @@ const findUserByEmail = async (email) => {
   return result.rows[0];
 };
 
+const findUserById = async (id) => {
+  const result = await pool.query(
+    `
+    SELECT *
+    FROM users
+    WHERE id = $1
+    `,
+    [id]
+  );
+
+  return result.rows[0];
+};
+
 const createUser = async ({
   name,
   email,
@@ -51,7 +64,8 @@ const createUser = async ({
 const updateUserProfile = async (
   id,
   name,
-  email
+  email,
+  avatar
 ) => {
 
   const result = await pool.query(
@@ -59,17 +73,21 @@ const updateUserProfile = async (
     UPDATE users
     SET
       name = $1,
-      email = $2
-    WHERE id = $3
+      email = $2,
+      avatar = $3,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = $4
     RETURNING
       id,
       name,
       email,
-      role
+      role,
+      avatar
     `,
     [
       name,
       email,
+      avatar,
       id
     ]
   );
@@ -98,6 +116,7 @@ const updateUserPassword = async (
 
 module.exports = {
   findUserByEmail,
+  findUserById,
   createUser,
   updateUserProfile,
   updateUserPassword,

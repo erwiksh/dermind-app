@@ -29,6 +29,171 @@ const MentalHealth = () => {
   const [history, setHistory] =
     useState([]);
 
+  const [journalText, setJournalText] = useState("");
+  const [journalSaving, setJournalSaving] = useState(false);
+
+  const handleSaveJournal = async () => {
+    if (!journalText.trim()) return;
+
+    try {
+      setJournalSaving(true);
+      const token = localStorage.getItem("token");
+      const response = await api.post(
+        "/mental/analyze",
+        {
+          text: journalText,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const result = response.data.data;
+
+      const journalUserMessage = {
+        id: Date.now(),
+        sender: "user",
+        text: `📝 Jurnal Harian: ${journalText}`,
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+
+      const journalAiMessage = {
+        id: Date.now() + 1,
+        sender: "ai",
+        text: `🧠 Hasil Analisis Jurnal Anda
+
+Status Mental: ${result.status}
+Confidence: ${result.confidence}%
+
+Detail:
+• Normal: ${result.breakdown.Normal}%
+• Anxious: ${result.breakdown.Anxious}%
+• Depressed: ${result.breakdown.Depressed}%`,
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+
+      setMessages((prev) => [...prev, journalUserMessage, journalAiMessage]);
+      setJournalText("");
+      alert("Jurnal harian berhasil disimpan dan dianalisis!");
+      fetchHistory();
+    } catch (error) {
+      alert(
+        error.response?.data?.message || "Gagal menganalisis jurnal"
+      );
+    } finally {
+      setJournalSaving(false);
+    }
+  };
+
+  const latestMood = history.length > 0 ? history[0] : null;
+
+  const defaultHeights = [40, 50, 45, 50, 60, 55, 60];
+  const chartItems = history.length > 0
+    ? [...history].slice(0, 7).reverse().map(item => {
+        const score = parseFloat(item.score || 0);
+        const height = isNaN(score) ? 50 : Math.max(10, Math.min(100, Math.round(score)));
+        let colorClass = "bg-slate-200";
+        if (item.prediction === "Normal") colorClass = "bg-primary";
+        else if (item.prediction === "Anxious") colorClass = "bg-orange-400";
+        else if (item.prediction === "Depressed") colorClass = "bg-red-500";
+        return { height, colorClass, prediction: item.prediction, score };
+      })
+    : defaultHeights.map(h => ({ height: h, colorClass: "bg-slate-100", prediction: "Normal", score: h }));
+
+  const moodStatusText = latestMood
+    ? `Status: ${latestMood.prediction === 'Normal' ? 'Stabil / Normal' : latestMood.prediction === 'Anxious' ? 'Cemas' : 'Depresi'}`
+    : "Status: Belum Ada Data";
+
+  const moodDescText = latestMood
+    ? `Tingkat keyakinan analisis terakhir sebesar ${latestMood.score}% terdeteksi sebagai ${latestMood.prediction}.`
+    : "Tulis jurnal harian atau pesan obrolan pertama Anda untuk melacak mood.";
+
+  const getInsights = () => {
+    if (!latestMood) {
+      return [
+        {
+          title: "Mulai Analisis",
+          desc: "Tuliskan perasaanmu atau simpan jurnal hari ini agar AI dapat memberikan saran kesehatan mental.",
+          icon: "info",
+          bgClass: "bg-primary/5 border-primary/10",
+          iconClass: "text-primary"
+        },
+        {
+          title: "Tips Tidur Sehat",
+          desc: "Tidur 7-8 jam per hari membantu menjaga keseimbangan emosi dan kesehatan mental.",
+          icon: "dark_mode",
+          bgClass: "bg-orange-50 border-orange-100",
+          iconClass: "text-orange-500"
+        }
+      ];
+    }
+    
+    if (latestMood.prediction === "Anxious") {
+      return [
+        {
+          title: "Latihan Pernapasan (4-7-8)",
+          desc: "Tarik napas 4 detik, tahan 7 detik, embuskan 8 detik untuk meredakan kecemasan dengan cepat.",
+          icon: "air",
+          bgClass: "bg-orange-50 border-orange-100",
+          iconClass: "text-orange-500"
+        },
+        {
+          title: "Hindari Kafein Berlebih",
+          desc: "Kafein dapat memicu stimulasi saraf berlebih yang meningkatkan perasaan cemas/gelisah.",
+          icon: "local_cafe",
+          bgClass: "bg-red-50 border-red-100",
+          iconClass: "text-red-500"
+        }
+      ];
+    }
+    
+    if (latestMood.prediction === "Depressed") {
+      return [
+        {
+          title: "Lakukan Aktivitas Fisik Ringan",
+          desc: "Jalan santai 15 menit dapat menstimulasi pelepasan hormon endorfin dan serotonin.",
+          icon: "directions_run",
+          bgClass: "bg-red-50 border-red-100",
+          iconClass: "text-red-500"
+        },
+        {
+          title: "Bicarakan dengan Orang Terdekat",
+          desc: "Menghubungi teman dekat atau keluarga terpercaya dapat mengurangi beban pikiran Anda.",
+          icon: "group",
+          bgClass: "bg-primary/5 border-primary/10",
+          iconClass: "text-primary"
+        }
+      ];
+    }
+    
+    return [
+      {
+        title: "Kondisi Mental Stabil",
+        desc: "Kesehatan mental Anda tergolong stabil dan normal. Pertahankan kebiasaan berpikir positif!",
+        icon: "sentiment_very_satisfied",
+        bgClass: "bg-emerald-50 border-emerald-100",
+        iconClass: "text-emerald-500"
+      },
+      {
+        title: "Latih Mindfulness",
+        desc: "Lakukan meditasi 5-10 menit per hari untuk melatih fokus dan ketenangan pikiran.",
+        icon: "self_improvement",
+        bgClass: "bg-primary/5 border-primary/10",
+        iconClass: "text-primary"
+      }
+    ];
+  };
+
+  const insights = getInsights();
+
   const handleSendMessage =
   async () => {
 
@@ -249,43 +414,52 @@ const MentalHealth = () => {
           </div>
           {/* Bar Chart */}
           <div className="flex items-end gap-2 h-20 mb-4">
-            {[40, 60, 45, 50, 90, 70, 50].map((h, i) => (
-              <div key={i} className={`flex-1 rounded-t-md ${i === 4 ? 'bg-primary' : 'bg-slate-100'}`} style={{height: `${h}%`}}></div>
+            {chartItems.map((item, i) => (
+              <div 
+                key={i} 
+                className={`flex-1 rounded-t-md ${item.colorClass} transition-all duration-500`} 
+                style={{ height: `${item.height}%` }}
+                title={`${item.prediction}: ${item.score}%`}
+              ></div>
             ))}
           </div>
-          <p className="text-xs font-bold mb-1">Status: Cemas Ringan</p>
-          <p className="text-[10px] text-slate-400 leading-relaxed">Puncak stres terdeteksi pada pukul 10:45 selama rapat kerja.</p>
+          <p className="text-xs font-bold mb-1">{moodStatusText}</p>
+          <p className="text-[10px] text-slate-400 leading-relaxed">{moodDescText}</p>
         </div>
 
         {/* AI Health Insights */}
         <div className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm">
           <h4 className="font-bold text-on-surface mb-4">AI Health Insights</h4>
           <div className="space-y-4">
-            <div className="flex gap-3 items-start p-3 bg-orange-50 rounded-2xl border border-orange-100">
-              <span className="material-symbols-outlined text-orange-500 text-sm">dark_mode</span>
-              <div>
-                <p className="text-[11px] font-bold">Tidur Kurang Optimal</p>
-                <p className="text-[10px] text-slate-500">Hanya 5.5 jam semalam. Cobalah tidur sebelum jam 22:00.</p>
+            {insights.map((insight, i) => (
+              <div key={i} className={`flex gap-3 items-start p-3 rounded-2xl border ${insight.bgClass}`}>
+                <span className={`material-symbols-outlined ${insight.iconClass} text-sm`}>{insight.icon}</span>
+                <div>
+                  <p className="text-[11px] font-bold">{insight.title}</p>
+                  <p className="text-[10px] text-slate-500">{insight.desc}</p>
+                </div>
               </div>
-            </div>
-            <div className="flex gap-3 items-start p-3 bg-primary/5 rounded-2xl border border-primary/10">
-              <span className="material-symbols-outlined text-primary text-sm">monitor_heart</span>
-              <div>
-                <p className="text-[11px] font-bold">Analisis HRV</p>
-                <p className="text-[10px] text-slate-500">Variabilitas detak jantung Anda rendah hari ini. Perlu istirahat.</p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
         {/* Jurnal Harian */}
-        <div className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm flex-1">
+        <div className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm flex-1 flex flex-col">
           <h4 className="font-bold text-on-surface mb-2">Jurnal Harian</h4>
           <p className="text-[10px] text-slate-400 mb-4">Simpan satu hal yang kamu syukuri hari ini untuk meningkatkan serotonin.</p>
           <textarea 
+            value={journalText}
+            onChange={(e) => setJournalText(e.target.value)}
             className="w-full h-32 bg-slate-50 border-none rounded-2xl p-4 text-xs focus:ring-2 focus:ring-primary/20 resize-none" 
             placeholder="Tulis di sini..."
           ></textarea>
+          <button
+            onClick={handleSaveJournal}
+            disabled={journalSaving || !journalText.trim()}
+            className="w-full mt-4 bg-primary text-white py-3 rounded-2xl font-bold text-xs hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {journalSaving ? "Menganalisis..." : "Simpan & Analisis"}
+          </button>
         </div>
 
         <div className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm">

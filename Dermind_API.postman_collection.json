@@ -8,7 +8,7 @@
   "variable": [
     {
       "key": "base_url",
-      "value": "http://localhost:5000/api"
+      "value": "http://localhost:5002/api"
     },
     {
       "key": "token",
@@ -81,36 +81,29 @@
           "name": "Get Users",
           "request": {
             "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/users"
-            }
-          }
-        },
-        {
-          "name": "Get User By ID",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/users/1"
-            }
-          }
-        },
-        {
-          "name": "Update User",
-          "request": {
-            "method": "PUT",
             "header": [
               {
-                "key": "Content-Type",
-                "value": "application/json"
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Rizwan Update\",\n  \"avatar\": \"avatar.jpg\"\n}"
-            },
             "url": {
-              "raw": "{{base_url}}/users/1"
+              "raw": "{{base_url}}/admin/users"
+            }
+          }
+        },
+        {
+          "name": "Delete User (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/1"
             }
           }
         }
@@ -138,10 +131,14 @@
           }
         },
         {
-          "name": "Create Article",
+          "name": "Create Article (Admin)",
           "request": {
             "method": "POST",
             "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
               {
                 "key": "Content-Type",
                 "value": "application/json"
@@ -149,7 +146,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Tips Menjaga Kesehatan Mental\",\n  \"content\": \"Isi artikel...\",\n  \"image\": \"mental.jpg\"\n}"
+              "raw": "{\n  \"title\": \"Tips Menjaga Kesehatan Mental\",\n  \"content\": \"Isi artikel...\",\n  \"image\": \"https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=400\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/articles"
@@ -157,18 +154,38 @@
           }
         },
         {
-          "name": "Update Article",
+          "name": "Update Article (Admin)",
           "request": {
             "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Tips Menjaga Kesehatan Mental Terupdate\",\n  \"content\": \"Isi artikel baru...\",\n  \"image\": \"https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=400\"\n}"
+            },
             "url": {
               "raw": "{{base_url}}/articles/1"
             }
           }
         },
         {
-          "name": "Delete Article",
+          "name": "Delete Article (Admin)",
           "request": {
             "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/articles/1"
             }
@@ -183,6 +200,12 @@
           "name": "Get Posts",
           "request": {
             "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/community"
             }
@@ -192,6 +215,12 @@
           "name": "Get Post Detail",
           "request": {
             "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/community/1"
             }
@@ -202,6 +231,10 @@
           "request": {
             "method": "POST",
             "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
               {
                 "key": "Content-Type",
                 "value": "application/json"
@@ -220,6 +253,20 @@
           "name": "Update Post",
           "request": {
             "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Update Stres\",\n  \"content\": \"Saya sedang mengalami stres yang membaik...\"\n}"
+            },
             "url": {
               "raw": "{{base_url}}/community/1"
             }
@@ -229,6 +276,12 @@
           "name": "Delete Post",
           "request": {
             "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/community/1"
             }
@@ -240,11 +293,17 @@
       "name": "Comments",
       "item": [
         {
-          "name": "Get Comments",
+          "name": "Get Comments by Post ID",
           "request": {
             "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/comments/1"
+              "raw": "{{base_url}}/comments/post/1"
             }
           }
         },
@@ -253,6 +312,10 @@
           "request": {
             "method": "POST",
             "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
               {
                 "key": "Content-Type",
                 "value": "application/json"
@@ -271,6 +334,12 @@
           "name": "Delete Comment",
           "request": {
             "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/comments/1"
             }
@@ -300,10 +369,14 @@
           }
         },
         {
-          "name": "Create Event",
+          "name": "Create Event (Admin)",
           "request": {
             "method": "POST",
             "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
               {
                 "key": "Content-Type",
                 "value": "application/json"
@@ -311,10 +384,48 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Fun Run 2026\",\n  \"description\": \"Kegiatan olahraga bersama\",\n  \"location\": \"Jakarta\",\n  \"event_date\": \"2026-07-01\"\n}"
+              "raw": "{\n  \"title\": \"Fun Run 2026\",\n  \"description\": \"Kegiatan olahraga bersama\",\n  \"location\": \"Jakarta\",\n  \"image\": \"https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=400\",\n  \"event_date\": \"2026-07-01\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/events"
+            }
+          }
+        },
+        {
+          "name": "Update Event (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Fun Run 2026 Terupdate\",\n  \"description\": \"Kegiatan olahraga bersama di Jakarta Pusat\",\n  \"location\": \"Jakarta Pusat\",\n  \"image\": \"https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=400\",\n  \"event_date\": \"2026-07-01\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/events/1"
+            }
+          }
+        },
+        {
+          "name": "Delete Event (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/events/1"
             }
           }
         }
@@ -328,6 +439,10 @@
           "request": {
             "method": "POST",
             "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
               {
                 "key": "Content-Type",
                 "value": "application/json"
@@ -376,27 +491,72 @@
               "raw": "{{base_url}}/skin/history"
             }
           }
+        },
+        {
+          "name": "Analyze Skin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/skin/analyze"
+            }
+          }
         }
       ]
     },
     {
-      "name": "News",
+      "name": "Chatbot",
       "item": [
         {
-          "name": "Get News",
+          "name": "Chat History",
           "request": {
             "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/news"
+              "raw": "{{base_url}}/chatbot/history"
             }
           }
         },
         {
-          "name": "Get News By ID",
+          "name": "Send Chat Message",
           "request": {
-            "method": "GET",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Bagaimana cara mengatasi jerawat secara alami?\"\n}"
+            },
             "url": {
-              "raw": "{{base_url}}/news/1"
+              "raw": "{{base_url}}/chatbot/message"
             }
           }
         }

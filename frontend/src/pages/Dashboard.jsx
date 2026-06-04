@@ -92,7 +92,7 @@ const loadDashboard = async () => {
 
         <h2 className="text-2xl font-bold">
           {profile?.name || "User"}
-        </h2> br
+        </h2>
      
       {/* ===== MODAL ANALISIS ===== */}
       {showAnalysis && (

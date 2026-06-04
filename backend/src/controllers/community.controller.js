@@ -92,6 +92,15 @@ exports.update = async (req, res) => {
 
 exports.destroy = async (req, res) => {
   try {
+    const post = await getPostById(req.params.id);
+    if (!post) {
+      return errorResponse(res, "Post not found", 404);
+    }
+
+    if (req.user.role !== "admin" && post.user_id !== req.user.id) {
+      return errorResponse(res, "Access denied. You can only delete your own posts.", 403);
+    }
+
     await deletePost(req.params.id);
 
     return successResponse(

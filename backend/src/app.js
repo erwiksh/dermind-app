@@ -14,6 +14,7 @@ const uploadRoutes = require("./routes/upload.routes");
 const mentalRoutes = require("./routes/mental.routes");
 const skinRoutes = require("./routes/skin.routes");
 const chatbotRoutes = require("./routes/chatbot.routes");
+const adminRoutes = require("./routes/admin.routes");
 
 const app = express();
 const path = require("path");
@@ -37,7 +38,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: "http://localhost:5002/api",
+        url: process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 5002}/api`,
       },
     ],
   },
@@ -66,6 +67,7 @@ app.use("/api/search",searchRoutes);
 app.use("/api/mental",mentalRoutes);
 app.use("/api/skin",skinRoutes);
 app.use("/api/chatbot",chatbotRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.get("/test-swagger", (req, res) => {
   res.send("Swagger route works");

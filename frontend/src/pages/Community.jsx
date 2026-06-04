@@ -1,76 +1,193 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
+const API_BASE =
+  (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5002/api') + '/community';
+
+const formatTime = (isoString) => {
+  const date = new Date(isoString);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 1) return 'Baru saja';
+  if (diffMins < 60) return `${diffMins} Menit yang lalu`;
+  if (diffHours < 24) return `${diffHours} Jam yang lalu`;
+  return `${diffDays} Hari yang lalu`;
+};
+
 
 const Community = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showTrends, setShowTrends] = useState(false);
   const [activeComments, setActiveComments] = useState(null);
+  const [posts, setPosts] = useState([]);
+  const [newPostTitle, setNewPostTitle] = useState('');
+  const [newPostContent, setNewPostContent] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isPosting, setIsPosting] = useState(false);
 
-  const [posts, setPosts] = useState([
-    {
-      id: 1,
-      author: "Erwiyana",
-      role: "Member Platinum",
-      time: "2 Jam yang lalu",
-      category: "Skincare",
-      title: "Rekomendasi Serum untuk Skin Barrier",
-      content: "Halo semua, saya mau berbagi pengalaman pakai serum niacinamide selama 2 minggu terakhir. Tekstur kulit jadi lebih halus dan kemerahan berkurang drastis!",
-      image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=800",
-      likes: 124,
-      comments: [
-        { user: "Rekal", text: "Wah merk apa itu bro?" },
-        { user: "Winson", text: "Niacinamide emang juara buat kemerahan." }
-      ],
-      isLiked: false
-    },
-    {
-      id: 2,
-      author: "Anggi",
-      role: "Health Enthusiast",
-      time: "5 Jam yang lalu",
-      category: "Mental Health",
-      title: "Tips Mengatur Waktu Tidur",
-      content: "Ternyata bener ya, kualitas tidur itu pengaruh banget ke mood seharian. Ada yang punya ritual sebelum tidur supaya lebih nyenyak?",
-      image: null,
-      likes: 89,
-      comments: [
-        { user: "Rani", text: "Coba dengerin podcast meditasi deh." }
-      ],
-      isLiked: false
-    }
-  ]);
+  const [comments, setComments] =
+  useState([]);
 
-  // Fungsi like
-  const handleLike = (id) => {
-    setPosts(posts.map(post => {
-      if (post.id === id) {
-        return {
-          ...post,
-          likes: post.isLiked ? post.likes - 1 : post.likes + 1,
-          isLiked: !post.isLiked
-        };
+  const [newComment, setNewComment] =
+    useState("");
+  // Fetch semua post dari API
+  const fetchPosts = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch(API_BASE);
+      const json = await res.json();
+      if (json.success) {
+        setPosts(json.data);
       }
-      return post;
-    }));
-  };
-
-  // Fungsi share
-  const handleShare = (post) => {
-    if (navigator.share) {
-      navigator.share({ title: post.title, text: post.content, url: window.location.href });
-    } else {
-      alert("Link diskusi berhasil disalin!");
+    } catch (err) {
+      console.error('Gagal mengambil data post:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const filteredPosts = posts.filter(post => 
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  // Buat post baru
+  const handlePost = async () => {
+
+  if (
+    !newPostTitle.trim() ||
+    !newPostContent.trim()
+  ) return;
+
+  setIsPosting(true);
+
+  try {
+
+    const token =
+      localStorage.getItem(
+        "token"
+      );
+
+    const res =
+      await fetch(
+        API_BASE,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+            Authorization:
+              `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            title:
+              newPostTitle,
+            content:
+              newPostContent,
+          }),
+        }
+      );
+
+    const json =
+      await res.json();
+
+    console.log(json);
+
+    if (json.success) {
+
+      setPosts([
+        json.data,
+        ...posts,
+      ]);
+
+      setNewPostTitle("");
+      setNewPostContent("");
+
+      alert(
+        "Posting berhasil dibuat"
+      );
+
+    }
+
+  } catch (err) {
+
+    console.error(
+      "Gagal membuat post:",
+      err
+    );
+
+  } finally {
+
+    setIsPosting(false);
+
+  }
+
+};
+const handleComment =
+async () => {
+
+  if (
+    !newComment.trim()
+  ) return;
+
+  try {
+
+    const token =
+      localStorage.getItem(
+        "token"
+      );
+
+    const res =
+      await fetch(
+        (import.meta.env.VITE_API_BASE_URL || "http://localhost:5002/api") + "/comments",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+            Authorization:
+              `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            post_id:
+              activeComments.id,
+            comment:
+              newComment
+          })
+        }
+      );
+
+    const json =
+      await res.json();
+
+    if (json.success) {
+
+      setComments([
+        ...comments,
+        json.data
+      ]);
+
+      setNewComment("");
+
+    }
+
+  } catch (error) {
+
+    console.log(error);
+
+  }
+
+};
+  const filteredPosts = posts.filter((post) =>
     post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    post.category.toLowerCase().includes(searchTerm.toLowerCase())
+    post.content.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <div className="flex gap-8 animate-in fade-in duration-700 relative">
-      
+
       {/* ===== MODAL TREN LAINNYA ===== */}
       {showTrends && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
@@ -91,28 +208,94 @@ const Community = () => {
       )}
 
       {/* ===== MODAL KOMENTAR ===== */}
-      {activeComments && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setActiveComments(null)}></div>
-          <div className="bg-white rounded-[40px] p-10 max-w-lg w-full relative z-10 animate-in slide-in-from-bottom-10 shadow-2xl">
-            <h3 className="text-xl font-bold mb-6">Komentar ({activeComments.comments.length})</h3>
-            <div className="space-y-4 mb-8 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-              {activeComments.comments.map((c, i) => (
-                <div key={i} className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                  <p className="text-xs font-bold text-primary mb-1">{c.user}</p>
-                  <p className="text-sm text-on-surface-variant">{c.text}</p>
-                </div>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <input type="text" placeholder="Tulis komentar..." className="flex-1 bg-slate-50 border-none rounded-xl px-4 text-sm focus:ring-1 focus:ring-primary" />
-              <button className="bg-primary text-white px-6 py-2 rounded-xl font-bold text-sm">Kirim</button>
-            </div>
-          </div>
-        </div>
-      )}
+{activeComments && (
+  <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+    
+    <div
+      className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+      onClick={() => setActiveComments(null)}
+    ></div>
 
-      {/* BAGIAN KIRI*/}
+    <div className="bg-white rounded-[40px] p-8 max-w-lg w-full relative z-10 animate-in slide-in-from-bottom-10 shadow-2xl">
+
+      <h3 className="text-xl font-bold mb-6">
+        Komentar Diskusi
+      </h3>
+
+      {/* LIST KOMENTAR */}
+      <div className="space-y-4 max-h-80 overflow-y-auto mb-6">
+
+        {comments.length > 0 ? (
+
+          comments.map((item) => (
+            <div
+              key={item.id}
+              className="bg-slate-50 p-4 rounded-2xl border border-slate-100"
+            >
+              <h4 className="font-bold text-sm text-on-surface">
+                {item.author_name}
+              </h4>
+
+              <p className="text-sm text-slate-600 mt-2">
+                {item.comment}
+              </p>
+
+              <p className="text-[10px] text-slate-400 mt-2">
+                {formatTime(item.created_at)}
+              </p>
+            </div>
+          ))
+
+        ) : (
+
+          <div className="text-center py-8">
+            <p className="text-slate-400 text-sm">
+              Belum ada komentar
+            </p>
+          </div>
+
+        )}
+
+      </div>
+
+      {/* INPUT KOMENTAR */}
+      <div className="flex gap-3 mb-4">
+
+        <input
+          type="text"
+          value={newComment}
+          onChange={(e) =>
+            setNewComment(
+              e.target.value
+            )
+          }
+          placeholder="Tulis komentar..."
+          className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm outline-none focus:border-primary"
+        />
+
+        <button
+          onClick={handleComment}
+          className="bg-primary text-white px-5 py-3 rounded-2xl font-bold text-sm"
+        >
+          Kirim
+        </button>
+
+      </div>
+
+      {/* BUTTON TUTUP */}
+      <button
+        onClick={() => setActiveComments(null)}
+        className="w-full bg-slate-100 text-slate-600 py-3 rounded-2xl font-bold text-sm"
+      >
+        Tutup
+      </button>
+
+    </div>
+
+  </div>
+)}
+
+      {/* BAGIAN KIRI */}
       <div className="flex-1 space-y-6">
         <div className="flex justify-between items-end mb-8">
           <div>
@@ -122,128 +305,137 @@ const Community = () => {
         </div>
 
         {/* Input Post */}
-        <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex items-center gap-4">
-          <img src="https://i.pravatar.cc/150?u=anggia" className="w-12 h-12 rounded-2xl object-cover" alt="User" />
-          <input 
-            type="text" 
-            placeholder="Apa yang ingin kamu bagikan hari ini?" 
-            className="flex-1 bg-slate-50 border-none rounded-2xl py-4 px-6 text-sm focus:ring-2 focus:ring-primary/20 transition-all"
+        <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm space-y-3">
+          <div className="flex items-center gap-4">
+            <img src="https://i.pravatar.cc/150?u=anggia" className="w-12 h-12 rounded-2xl object-cover" alt="User" />
+            <input
+              type="text"
+              placeholder="Judul diskusi..."
+              value={newPostTitle}
+              onChange={(e) => setNewPostTitle(e.target.value)}
+              className="flex-1 bg-slate-50 border-none rounded-2xl py-3 px-5 text-sm font-semibold focus:ring-2 focus:ring-primary/20 transition-all"
+            />
+          </div>
+          <div className="flex items-end gap-4 pl-16">
+            <textarea
+              placeholder="Apa yang ingin kamu bagikan hari ini?"
+              value={newPostContent}
+              onChange={(e) => setNewPostContent(e.target.value)}
+              rows={2}
+              className="flex-1 bg-slate-50 border-none rounded-2xl py-3 px-5 text-sm focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+            />
+            <button
+              onClick={handlePost}
+              disabled={isPosting || !newPostTitle.trim() || !newPostContent.trim()}
+              className="bg-primary text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isPosting ? 'Posting...' : 'Posting'}
+            </button>
+          </div>
+        </div>
+
+        {/* Search */}
+        <div className="relative">
+          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+          <input
+            type="text"
+            placeholder="Cari diskusi..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full bg-white border border-slate-100 rounded-2xl py-3 pl-11 pr-5 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 transition-all"
           />
-          <button className="bg-primary text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-lg shadow-primary/20">Posting</button>
         </div>
 
         {/* Feed Posts */}
         <div className="space-y-6">
-         {filteredPosts.map((post) => ( 
-            <div key={post.id} className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden hover:border-primary/30 transition-all group">
-              <div className="p-8">
-                <div className="flex justify-between items-start mb-6">
-                  <div className="flex gap-4">
-                    <img src={`https://i.pravatar.cc/150?u=${post.author}`} className="w-12 h-12 rounded-2xl object-cover" alt={post.author} />
-                    <div>
-                      <h4 className="font-bold text-on-surface flex items-center gap-2">
-                        {post.author}
-                        <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-tighter">{post.category}</span>
-                      </h4>
-                      <p className="text-xs text-slate-400 font-medium">{post.role} • {post.time}</p>
+          {isLoading ? (
+            <div className="text-center py-16 text-slate-400 text-sm">Memuat diskusi...</div>
+          ) : filteredPosts.length === 0 ? (
+            <div className="text-center py-16 text-slate-400 text-sm">Belum ada diskusi.</div>
+          ) : (
+            filteredPosts.map((post) => (
+              <div key={post.id} className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden hover:border-primary/30 transition-all group">
+                <div className="p-8">
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="flex gap-4">
+                      <img
+                        src={`https://i.pravatar.cc/150?u=${post.user_id}`}
+                        className="w-12 h-12 rounded-2xl object-cover"
+                        alt={`User ${post.user_id}`}
+                      />
+                      <div>
+                        <h4 className="font-bold text-on-surface">
+                          {post.author_name || `User #${post.user_id}`}
+                        </h4>
+                        <p className="text-xs text-slate-400 font-medium">{formatTime(post.created_at)}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <h3 className="text-xl font-bold text-on-surface mb-3">{post.title}</h3>
-                <p className="text-on-surface-variant text-sm leading-relaxed mb-6">{post.content}</p>
+                  <h3 className="text-xl font-bold text-on-surface mb-3">{post.title}</h3>
+                  <p className="text-on-surface-variant text-sm leading-relaxed mb-6">{post.content}</p>
 
-                {post.image && (
-                  <div className="rounded-[24px] overflow-hidden mb-6 aspect-video bg-slate-100">
-                    <img src={post.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="Post content" />
-                  </div>
-                )}
+                  <div className="flex items-center gap-6 pt-6 border-t border-slate-50">
 
-                <div className="flex items-center gap-6 pt-6 border-t border-slate-50">
-                  
-                  {/* LIKE BUTTON*/}
-                  <button 
-                    onClick={() => handleLike(post.id)}
-                    className={`flex items-center gap-2 transition-all duration-300 transform active:scale-125 ${post.isLiked ? 'text-red-500' : 'text-slate-400 hover:text-red-400'}`}
-                  >
-                    <span 
-                        className="material-symbols-outlined text-2xl" 
-                        style={{ fontVariationSettings: `'FILL' ${post.isLiked ? 1 : 0}, 'wght' 400, 'GRAD' 0, 'opsz' 24` }}
+                    {/* COMMENT BUTTON */}
+                    <button
+                      onClick={async () => {
+
+                      setActiveComments(post);
+
+                      try {
+
+                        const res =
+                          await fetch(
+                            `${import.meta.env.VITE_API_BASE_URL || "http://localhost:5002/api"}/comments/post/${post.id}`
+                          );
+
+                        const json =
+                          await res.json();
+
+                        if (json.success) {
+                          setComments(
+                            json.data
+                          );
+                        }
+
+                      } catch (error) {
+
+                        console.log(error);
+
+                      }
+
+                    }}
+                      className="flex items-center gap-2 text-slate-400 hover:text-primary transition-colors"
                     >
-                        {post.isLiked ? 'favorite' : 'favorite'}
-                    </span>
-                    <span className={`text-xs font-bold ${post.isLiked ? 'text-red-500' : 'text-slate-400'}`}>
-                        {post.likes}
-                    </span>
-                  </button>
+                      <span className="material-symbols-outlined text-xl">chat_bubble</span>
+                      <span className="text-xs font-bold">Komentar</span>
+                    </button>
 
-                  {/* COMMENT BUTTON */}
-                  <button 
-                    onClick={() => setActiveComments(post)}
-                    className="flex items-center gap-2 text-slate-400 hover:text-primary transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-xl">chat_bubble</span>
-                    <span className="text-xs font-bold">{post.comments.length}</span>
-                  </button>
-
-                  {/* SHARE BUTTON */}
-                  <button 
-                    onClick={() => handleShare(post)}
-                    className="flex items-center gap-2 text-slate-400 hover:text-primary transition-colors ml-auto"
-                  >
-                    <span className="material-symbols-outlined text-xl">share</span>
-                  </button>
+                    {/* SHARE BUTTON */}
+                    <button
+                      onClick={() => {
+                        if (navigator.share) {
+                          navigator.share({ title: post.title, text: post.content, url: window.location.href });
+                        } else {
+                          alert('Link diskusi berhasil disalin!');
+                        }
+                      }}
+                      className="flex items-center gap-2 text-slate-400 hover:text-primary transition-colors ml-auto"
+                    >
+                      <span className="material-symbols-outlined text-xl">share</span>
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 
-      {/* BAGIAN KANAN*/}
-      <div className="w-[320px] space-y-6">
-        <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm">
-          <h4 className="font-bold text-on-surface mb-6">Topik Populer</h4>
-          <div className="space-y-6">
-            <div>
-              <div className="flex justify-between text-xs font-bold mb-2"><span>#SkincareRoutine</span><span className="text-primary">85%</span></div>
-              <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-primary" style={{width: '85%'}}></div></div>
-            </div>
-            <div>
-              <div className="flex justify-between text-xs font-bold mb-2"><span>#MentalAwareness</span><span className="text-primary">62%</span></div>
-              <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-primary-container" style={{width: '62%'}}></div></div>
-            </div>
-          </div>
-          <p 
-            onClick={() => setShowTrends(true)}
-            className="text-[10px] text-center text-slate-400 font-bold uppercase mt-6 tracking-widest cursor-pointer hover:text-primary transition-colors"
-          >
-            Lihat Tren Lainnya
-          </p>
-        </div>
+      
 
-        <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm">
-          <h4 className="font-bold text-on-surface mb-6">Aktif Hari Ini</h4>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <img src="https://i.pravatar.cc/150?u=1" className="w-8 h-8 rounded-xl object-cover" alt="user" />
-                <p className="text-xs font-bold">Dr. Sarah Wijaya</p>
-              </div>
-              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-primary rounded-[32px] p-8 shadow-lg shadow-primary/20 relative overflow-hidden group">
-          <div className="relative z-10 text-white">
-            <p className="text-xs font-bold opacity-60 uppercase mb-1">Skor Keaktifan Di</p>
-            <h4 className="text-2xl font-bold mb-6">Komunitas</h4>
-            <div className="flex items-baseline gap-1"><span className="text-5xl font-bold">82</span><span className="text-lg opacity-50">/100</span></div>
-          </div>
-          <span className="material-symbols-outlined absolute -right-4 -bottom-4 text-8xl text-white opacity-10">trending_up</span>
-        </div>
-      </div>
+      
     </div>
   );
 };

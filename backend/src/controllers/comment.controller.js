@@ -1,5 +1,6 @@
 const {
   getCommentsByPostId,
+  getCommentById,
   createComment,
   deleteComment,
 } = require("../services/comment.service");
@@ -59,9 +60,16 @@ exports.store = async (req, res) => {
 
 exports.destroy = async (req, res) => {
   try {
-    await deleteComment(
-      req.params.id
-    );
+    const comment = await getCommentById(req.params.id);
+    if (!comment) {
+      return errorResponse(res, "Comment not found", 404);
+    }
+
+    if (req.user.role !== "admin" && comment.user_id !== req.user.id) {
+      return errorResponse(res, "Access denied. You can only delete your own comments.", 403);
+    }
+
+    await deleteComment(req.params.id);
 
     return successResponse(
       res,

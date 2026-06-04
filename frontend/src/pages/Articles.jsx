@@ -41,6 +41,42 @@ const Articles = () => {
     }
   };
 
+  const getArticleCategory = (article) => {
+    const title = (article.title || '').toLowerCase();
+    const content = (article.content || '').toLowerCase();
+    
+    if (title.includes('skincare') || title.includes('kulit') || title.includes('jerawat') || title.includes('wajah') || title.includes('serum') || title.includes('sunscreen') || title.includes('acne') || title.includes('dermatitis') ||
+        content.includes('skincare') || content.includes('kulit') || content.includes('jerawat') || content.includes('wajah') || content.includes('serum') || content.includes('sunscreen') || content.includes('acne') || content.includes('dermatitis')) {
+      return 'Skincare';
+    }
+    
+    if (title.includes('mental') || title.includes('stres') || title.includes('stress') || title.includes('cemas') || title.includes('anxious') || title.includes('depresi') || title.includes('depressed') || title.includes('burnout') || title.includes('meditasi') || title.includes('psikolog') ||
+        content.includes('mental') || content.includes('stres') || content.includes('stress') || content.includes('cemas') || content.includes('anxious') || content.includes('depresi') || content.includes('depressed') || content.includes('burnout') || content.includes('meditasi') || content.includes('psikolog')) {
+      return 'Mental Health';
+    }
+    
+    if (title.includes('nutrisi') || title.includes('makanan') || title.includes('diet') || title.includes('vitamin') || title.includes('makan') ||
+        content.includes('nutrisi') || content.includes('makanan') || content.includes('diet') || content.includes('vitamin') || content.includes('makan')) {
+      return 'Nutrisi';
+    }
+    
+    if (title.includes('olahraga') || title.includes('lari') || title.includes('run') || title.includes('yoga') || title.includes('gym') || title.includes('fit') ||
+        content.includes('olahraga') || content.includes('lari') || content.includes('run') || content.includes('yoga') || content.includes('gym') || content.includes('fit')) {
+      return 'Olahraga';
+    }
+    
+    if (title.includes('anak') || title.includes('bayi') || title.includes('balita') || title.includes('pediatrik') ||
+        content.includes('anak') || content.includes('bayi') || content.includes('balita') || content.includes('pediatrik')) {
+      return 'Kesehatan Anak';
+    }
+    
+    return 'Skincare'; 
+  };
+
+  const filteredArticles = activeCategory === 'Semua'
+    ? articles
+    : articles.filter(art => getArticleCategory(art) === activeCategory);
+
   const categories = [
     'Semua',
     'Skincare',
@@ -135,7 +171,7 @@ const Articles = () => {
         <img
           src={
             selectedArticle.image
-              ? `http://localhost:5002/uploads/${selectedArticle.image}`
+              ? (selectedArticle.image.startsWith("http") ? selectedArticle.image : `${import.meta.env.VITE_API_URL || "http://localhost:5002"}/uploads/${selectedArticle.image}`)
               : "https://placehold.co/1200x600?text=Artikel"
           }
           className="w-full h-full object-cover"
@@ -257,117 +293,103 @@ const Articles = () => {
       </div>
 
       {/* Bagian Atas */}
-<div className="grid grid-cols-12 gap-6 mb-10">
-
-  {articles.length > 0 && (
-
-    <div
-      onClick={() =>
-        setSelectedArticle(
-          articles[0]
-        )
-      }
-      className="col-span-12 lg:col-span-8 bg-white rounded-[32px] overflow-hidden border border-slate-100 shadow-sm relative group cursor-pointer h-[400px]"
-    >
-
-      <img
-        src={
-          articles[0]?.image?.startsWith("http")
-            ? articles[0].image
-            : `http://localhost:5002/uploads/${articles[0].image}`
-        }
-        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
-        alt="Hero"
-      />
-
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-10 flex flex-col justify-end">
-
-        <span className="bg-primary-container text-primary px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest w-fit mb-4">
-          Trending
-        </span>
-
-        <h3 className="text-3xl font-bold text-white mb-4 leading-tight max-w-2xl">
-          {articles[0]?.title}
-        </h3>
-
-        <p className="text-white/70 text-sm max-w-xl mb-6 line-clamp-2">
-          {
-            articles[0]?.content?.substring(
-              0,
-              150
-            ) + "..."
-          }
-        </p>
-
-        <div className="flex items-center gap-4">
-          <button className="text-white font-bold text-sm flex items-center gap-2 hover:gap-4 transition-all">
-            Baca Selengkapnya
-            <span className="material-symbols-outlined text-sm">
-              arrow_forward
-            </span>
-          </button>
-        </div>
-
-      </div>
-
-    </div>
-
-  )}
-
-        {/* Artikel samping */}
-        <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
-
-          {articles.slice(1, 3).map((article, index) => (
-
+      <div className="grid grid-cols-12 gap-6 mb-10">
+        {filteredArticles.length === 0 ? (
+          <div className="col-span-12 text-center py-20 bg-white rounded-[32px] border border-dashed border-slate-200 w-full">
+            <span className="material-symbols-outlined text-6xl text-slate-200 mb-4 animate-pulse">article</span>
+            <p className="text-slate-400 font-bold font-manrope">Belum ada artikel di kategori ini</p>
+            <p className="text-slate-300 text-xs mt-1">Coba pilih kategori lain atau kembali ke Semua.</p>
+          </div>
+        ) : (
+          <>
             <div
-              key={article.id}
               onClick={() =>
-                setSelectedArticle(article)
+                setSelectedArticle(
+                  filteredArticles[0]
+                )
               }
-              className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm flex-1 flex flex-col justify-center hover:border-primary/20 transition-all cursor-pointer"
+              className="col-span-12 lg:col-span-8 bg-white rounded-[32px] overflow-hidden border border-slate-100 shadow-sm relative group cursor-pointer h-[400px]"
             >
-
-              <div
-                className={`flex items-center gap-2 mb-3 font-bold text-[9px] uppercase tracking-widest ${
-                  index === 0
-                    ? "text-primary"
-                    : "text-orange-400"
-                }`}
-              >
-
-                <span className="material-symbols-outlined text-sm">
-                  {index === 0
-                    ? "bolt"
-                    : "psychology"}
+              <img
+                src={
+                  filteredArticles[0]?.image
+                    ? (filteredArticles[0].image.startsWith("http") ? filteredArticles[0].image : `${import.meta.env.VITE_API_URL || "http://localhost:5002"}/uploads/${filteredArticles[0].image}`)
+                    : "https://placehold.co/1200x600?text=Artikel"
+                }
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
+                alt="Hero"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-10 flex flex-col justify-end">
+                <span className="bg-primary-container text-primary px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest w-fit mb-4">
+                  Trending
                 </span>
-
-                {index === 0
-                  ? "Terbaru"
-                  : "Artikel"}
-
+                <h3 className="text-3xl font-bold text-white mb-4 leading-tight max-w-2xl font-manrope">
+                  {filteredArticles[0]?.title}
+                </h3>
+                <p className="text-white/70 text-sm max-w-xl mb-6 line-clamp-2">
+                  {
+                    filteredArticles[0]?.content?.substring(
+                      0,
+                      150
+                    ) + "..."
+                  }
+                </p>
+                <div className="flex items-center gap-4">
+                  <button className="text-white font-bold text-sm flex items-center gap-2 hover:gap-4 transition-all">
+                    Baca Selengkapnya
+                    <span className="material-symbols-outlined text-sm">
+                      arrow_forward
+                    </span>
+                  </button>
+                </div>
               </div>
-
-              <h4 className="font-bold text-on-surface mb-2 leading-snug line-clamp-2">
-                {article.title}
-              </h4>
-
-              <p className="text-[10px] text-slate-400">
-                {new Date(
-                  article.created_at
-                ).toLocaleDateString("id-ID")}
-              </p>
-
             </div>
 
-          ))}
-
-</div>
+            {/* Artikel samping */}
+            <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
+              {filteredArticles.slice(1, 3).map((article, index) => (
+                <div
+                  key={article.id}
+                  onClick={() =>
+                    setSelectedArticle(article)
+                  }
+                  className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm flex-1 flex flex-col justify-center hover:border-primary/20 transition-all cursor-pointer"
+                >
+                  <div
+                    className={`flex items-center gap-2 mb-3 font-bold text-[9px] uppercase tracking-widest ${
+                      index === 0
+                        ? "text-primary"
+                        : "text-orange-400"
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-sm">
+                      {index === 0
+                        ? "bolt"
+                        : "psychology"}
+                    </span>
+                    {index === 0
+                      ? "Terbaru"
+                      : "Artikel"}
+                  </div>
+                  <h4 className="font-bold text-on-surface mb-2 leading-snug line-clamp-2 font-manrope">
+                    {article.title}
+                  </h4>
+                  <p className="text-[10px] text-slate-400">
+                    {new Date(
+                      article.created_at
+                    ).toLocaleDateString("id-ID")}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Bagian Tengah: Artikel */}
 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-  {articles.slice(1).map((art) => (
+  {filteredArticles.slice(1).map((art) => (
 
     <div
       key={art.id}
@@ -382,7 +404,7 @@ const Articles = () => {
         <img
           src={
             art.image
-              ? `http://localhost:5002/uploads/${art.image}`
+              ? (art.image.startsWith("http") ? art.image : `${import.meta.env.VITE_API_URL || "http://localhost:5002"}/uploads/${art.image}`)
               : "https://placehold.co/600x400?text=Artikel"
           }
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"

@@ -27,35 +27,99 @@ const Events = () => {
     setEvents] =
     useState([]);
 
+  const [currentUser, setCurrentUser] = useState(null);
+  const [skinHistory, setSkinHistory] = useState([]);
+
   useEffect(() => {
+    const userJson = localStorage.getItem("user");
+    if (userJson) {
+      const user = JSON.parse(userJson);
+      setCurrentUser(user);
 
+      // Load registered and reminder IDs from localStorage
+      const storedFollows = localStorage.getItem(`registered_events_${user.id}`);
+      if (storedFollows) {
+        setRegisteredIds(JSON.parse(storedFollows));
+      }
+
+      const storedReminders = localStorage.getItem(`reminder_events_${user.id}`);
+      if (storedReminders) {
+        setRemindersIds(JSON.parse(storedReminders));
+      }
+
+      // Load skin analysis history for Trend Analisis
+      fetchSkinHistory();
+    }
     loadEvents();
-
   }, []);
 
-  const loadEvents =
-  async () => {
-
+  const fetchSkinHistory = async () => {
     try {
-
-      const res =
-        await api.get(
-          "/events"
-        );
-
-      setEvents(
-        res.data.data
-      );
-
+      const res = await api.get("/skin/history");
+      if (res.data.success) {
+        setSkinHistory(res.data.data);
+      }
     } catch (error) {
+      console.log("Error loading skin history:", error);
+    }
+  };
 
-      console.log(
-        error
-      );
+  const loadEvents = async () => {
+    try {
+      const res = await api.get("/events");
+      setEvents(res.data.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
+  const toggleFollow = (id) => {
+    if (!currentUser) return;
+    let updated;
+    if (registeredIds.includes(id)) {
+      updated = registeredIds.filter(item => item !== id);
+    } else {
+      updated = [...registeredIds, id];
+    }
+    setRegisteredIds(updated);
+    localStorage.setItem(`registered_events_${currentUser.id}`, JSON.stringify(updated));
+  };
+
+  const toggleReminder = (id) => {
+    if (!currentUser) return;
+    let updated;
+    if (reminderIds.includes(id)) {
+      updated = reminderIds.filter(item => item !== id);
+    } else {
+      updated = [...reminderIds, id];
+    }
+    setRemindersIds(updated);
+    localStorage.setItem(`reminder_events_${currentUser.id}`, JSON.stringify(updated));
+  };
+
+  const getTrendData = () => {
+    if (skinHistory.length === 0) {
+      return {
+        heights: [30, 45, 60, 40, 80, 95],
+        message: "Belum ada riwayat deteksi. Coba fitur AI Skin Detection untuk melihat tren analisis Anda."
+      };
+    }
+    // Take the last 6 records, oldest to newest (recent values on the right)
+    const recentScans = [...skinHistory].slice(0, 6).reverse();
+    const heights = recentScans.map(scan => Math.max(15, parseFloat(scan.confidence)));
+
+    // Fill missing bars up to 6
+    while (heights.length < 6) {
+      heights.unshift(20);
     }
 
+    const latestScan = skinHistory[0];
+    const message = `Deteksi terakhir menunjukkan kondisi ${latestScan.prediction} (${parseFloat(latestScan.confidence).toFixed(0)}% confidence).`;
+
+    return { heights, message };
   };
+
+  const { heights, message: trendMessage } = getTrendData();
   return (
     <div className="animate-in fade-in duration-700 pb-20 relative">
 
@@ -158,11 +222,11 @@ const Events = () => {
           <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm flex-1 text-on-surface">
             <h4 className="font-bold text-sm">Trend Analisis</h4>
             <div className="flex items-end gap-2 h-20 mb-4 mt-4">
-              {[30, 45, 60, 40, 80, 95].map((h, i) => (
+              {heights.map((h, i) => (
                 <div key={i} className="flex-1 bg-primary/10 rounded-t-md hover:bg-primary/30 transition-all" style={{height: `${h}%`}}></div>
               ))}
             </div>
-            <p className="text-[11px] text-on-surface-variant leading-relaxed">Penggunaan fitur AI Skin Detection naik 15% pada minggu ini.</p>
+            <p className="text-[11px] text-on-surface-variant leading-relaxed">{trendMessage}</p>
           </div>
 
           <div className="bg-[#1a2b2b] rounded-[32px] p-8 border border-white/5 shadow-sm flex-1 text-white relative overflow-hidden">
@@ -193,9 +257,12 @@ const Events = () => {
       <div className="w-full md:w-48 h-32 rounded-2xl overflow-hidden bg-slate-50 flex-shrink-0">
 
         <img
-          src={`http://localhost:5002/uploads/${event.image}`}
+          src={event.image ? (event.image.startsWith("http") ? event.image : `${import.meta.env.VITE_API_URL || "http://localhost:5002"}/uploads/${event.image}`) : "https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=400"}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
           alt={event.title}
+          onError={(e) => {
+            e.target.src = "https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=400";
+          }}
         />
 
       </div>

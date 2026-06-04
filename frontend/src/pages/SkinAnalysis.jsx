@@ -536,7 +536,7 @@ const capturePhoto = () => {
               <div className="w-16 h-16 rounded-xl overflow-hidden border border-slate-200">
 
                 <img
-                  src={`http://localhost:5002${item.image_url}`}
+                  src={`${import.meta.env.VITE_API_URL || "http://localhost:5002"}${item.image_url}`}
                   alt={item.prediction}
                   className="w-full h-full object-cover"
                 />
@@ -606,7 +606,7 @@ const capturePhoto = () => {
                   <div className="w-16 h-16 rounded-xl overflow-hidden border border-slate-200">
 
                     <img
-                      src={`http://localhost:5002${item.image_url}`}
+                      src={`${import.meta.env.VITE_API_URL || "http://localhost:5002"}${item.image_url}`}
                       alt={item.prediction}
                       className="w-full h-full object-cover"
                     />

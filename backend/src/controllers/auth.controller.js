@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 
 const {
   findUserByEmail,
+  findUserById,
   createUser,
   updateUserProfile,
   updateUserPassword,
@@ -23,6 +24,7 @@ exports.register = async (
       name,
       email,
       password,
+      avatar,
     } = req.body;
 
     if (
@@ -32,7 +34,7 @@ exports.register = async (
     ) {
       return errorResponse(
         res,
-        "All fields are required",
+        "Name, email, and password are required",
         400
       );
     }
@@ -145,6 +147,7 @@ exports.login = async (
           name: user.name,
           email: user.email,
           role: user.role,
+          avatar: user.avatar,
         },
       }
     );
@@ -166,8 +169,8 @@ exports.profile = async (
   try {
 
     const user =
-      await findUserByEmail(
-        req.user.email
+      await findUserById(
+        req.user.id
       );
 
     return successResponse(
@@ -178,6 +181,7 @@ exports.profile = async (
         name: user.name,
         email: user.email,
         role: user.role,
+        avatar: user.avatar
       }
     );
 
@@ -201,7 +205,8 @@ exports.updateProfile =
 
       const {
         name,
-        email
+        email,
+        avatar
       } = req.body;
 
       if (
@@ -219,7 +224,8 @@ exports.updateProfile =
         await updateUserProfile(
           req.user.id,
           name,
-          email
+          email,
+          avatar
         );
 
       return successResponse(
@@ -238,7 +244,6 @@ exports.updateProfile =
     }
 
   };
-
 exports.changePassword =
   async (
     req,
@@ -264,8 +269,8 @@ exports.changePassword =
       }
 
       const user =
-        await findUserByEmail(
-          req.user.email
+        await findUserById(
+          req.user.id
         );
 
       const isMatch =

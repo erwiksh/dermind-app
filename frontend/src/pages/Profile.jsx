@@ -3,8 +3,6 @@ import api from '../services/api';
 
 const Profile = () => {
   const [activeModal, setActiveModal] = useState(null);
-  const [selectedArticle, setSelectedArticle] = useState(null);
-  const [savedList, setSavedList] = useState([]);
 
   const [user, setUser] = useState(null);
   const [mentalLatest, setMentalLatest] = useState(null);
@@ -27,54 +25,99 @@ const [newPassword, setNewPassword] =
 const [confirmPassword, setConfirmPassword] =
   useState("");
 
+  const [editAvatar, setEditAvatar] =
+  useState(null);
+
   const handleUpdateProfile =
-  async () => {
+async () => {
 
-    try {
+  try {
 
-      const token =
-        localStorage.getItem(
-          "token"
-        );
+    const token =
+      localStorage.getItem(
+        "token"
+      );
 
-      const response =
-        await api.put(
-          "/auth/profile",
-          {
-            name: editName,
-            email: editEmail,
-          },
+    let avatarPath =
+      user?.avatar;
+
+    // Upload avatar dulu
+    if (editAvatar) {
+
+      const formData =
+        new FormData();
+
+      formData.append(
+        "image",
+        editAvatar
+      );
+
+      const uploadRes =
+        await api.post(
+          "/upload",
+          formData,
           {
             headers: {
               Authorization:
                 `Bearer ${token}`,
+              "Content-Type":
+                "multipart/form-data",
             },
           }
         );
 
-      alert(
-        response.data.message
-      );
-
-      setUser(
-        response.data.data
-      );
-
-      setActiveModal(
-        null
-      );
-
-    } catch (error) {
-
-      alert(
-        error.response?.data
-          ?.message ||
-          "Update profile gagal"
-      );
-
+      avatarPath =
+        uploadRes.data.data.path;
     }
 
-  };
+    // Update profile
+    const response =
+      await api.put(
+        "/auth/profile",
+        {
+          name: editName,
+          email: editEmail,
+          avatar: avatarPath,
+        },
+        {
+          headers: {
+            Authorization:
+              `Bearer ${token}`,
+          },
+        }
+      );
+
+    // Update localStorage user session data
+    localStorage.setItem("user", JSON.stringify(response.data.data));
+
+    alert(
+      response.data.message
+    );
+
+    setUser(
+      response.data.data
+    );
+
+    setActiveModal(
+      null
+    );
+
+    // Refresh page to update header/navbar avatar and name
+    window.location.reload();
+
+  } catch (error) {
+
+    console.log(error);
+
+    alert(
+      error.response?.data
+        ?.message ||
+      "Update profile gagal"
+    );
+
+  }
+
+};
 
   const handleChangePassword =
   async () => {
@@ -142,6 +185,13 @@ const [confirmPassword, setConfirmPassword] =
     loadProfile();
   }, []);
 
+  useEffect(() => {
+    if (activeModal === 'edit' && user) {
+      setEditName(user.name || "");
+      setEditEmail(user.email || "");
+    }
+  }, [activeModal, user]);
+
   const loadProfile = async () => {
     try {
       setLoading(true);
@@ -154,7 +204,7 @@ const [confirmPassword, setConfirmPassword] =
         api.get('/skin/history', { headers }),
       ]);
 
-      // ── USER ──────────────────────────────────────────────────────────────
+      // ── USER ──────────
       const userData =
         profileRes.data.user ||
         profileRes.data.data ||
@@ -162,14 +212,14 @@ const [confirmPassword, setConfirmPassword] =
         {};
       setUser(userData);
 
-      // ── MENTAL ────────────────────────────────────────────────────────────
+      // ── MENTAL ────
       const mentalData = Array.isArray(mentalRes.data)
         ? mentalRes.data
         : mentalRes.data.data || [];
       setMentalCount(mentalData.length);
       if (mentalData.length > 0) setMentalLatest(mentalData[0]);
 
-      // ── SKIN ──────────────────────────────────────────────────────────────
+      // ── SKIN ───
       const skinData = Array.isArray(skinRes.data)
         ? skinRes.data
         : skinRes.data.data || [];
@@ -188,10 +238,7 @@ const [confirmPassword, setConfirmPassword] =
     window.location.href = '/login';
   };
 
-  const removeSavedArticle = (e, id) => {
-    e.stopPropagation();
-    setSavedList((prev) => prev.filter((a) => a.id !== id));
-  };
+  
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '-';
@@ -247,26 +294,6 @@ const [confirmPassword, setConfirmPassword] =
   return (
     <div className="animate-in fade-in duration-700 pb-20 relative">
 
-      {/* ===== MODAL: BACA ARTIKEL TERSIMPAN ===== */}
-      {selectedArticle && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 md:p-10">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setSelectedArticle(null)} />
-          <div className="bg-white rounded-[40px] w-full max-w-3xl max-h-[85vh] overflow-y-auto relative z-10 animate-in zoom-in-95 duration-300 shadow-2xl">
-            {selectedArticle.image && (
-              <img src={selectedArticle.image} className="w-full h-64 object-cover" alt="" />
-            )}
-            <div className="p-8 md:p-12">
-              <span className="text-primary font-bold text-xs uppercase tracking-widest">{selectedArticle.cat}</span>
-              <h3 className="text-3xl font-bold text-on-surface mt-2 mb-6">{selectedArticle.title}</h3>
-              <p className="text-on-surface-variant text-lg leading-relaxed">{selectedArticle.content}</p>
-              <button onClick={() => setSelectedArticle(null)} className="mt-10 bg-slate-100 px-8 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-200 transition-all">
-                Tutup
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
             {/* ===== MODAL: EDIT PROFIL ===== */}
       {activeModal === 'edit' && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
@@ -306,6 +333,17 @@ const [confirmPassword, setConfirmPassword] =
                 }
                 className="w-full bg-slate-50 border-none rounded-xl p-4"
                 placeholder="Email"
+              />
+
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) =>
+                  setEditAvatar(
+                    e.target.files[0]
+                  )
+                }
+                className="w-full bg-slate-50 border-none rounded-xl p-4"
               />
 
             </div>
@@ -436,8 +474,18 @@ const [confirmPassword, setConfirmPassword] =
         {/* KIRI: Identitas User */}
         <div className="col-span-12 lg:col-span-4 bg-white rounded-[40px] p-10 border border-slate-100 shadow-sm flex flex-col items-center text-center">
           <div className="relative mb-6">
-            <div className="w-32 h-32 rounded-full border-4 border-primary-container bg-primary/10 flex items-center justify-center">
-              <span className="material-symbols-outlined text-primary text-5xl">person</span>
+            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary-container">
+
+              <img
+                src={
+                  user?.avatar
+                    ? `${import.meta.env.VITE_API_URL || "http://localhost:5002"}${user.avatar}`
+                    : "https://i.pravatar.cc/300"
+                }
+                alt="Avatar"
+                className="w-full h-full object-cover"
+              />
+
             </div>
             {user?.role && (
               <span className="absolute bottom-1 right-1 bg-primary text-white text-[9px] font-bold px-3 py-1 rounded-full border-4 border-white tracking-widest uppercase">
@@ -448,7 +496,6 @@ const [confirmPassword, setConfirmPassword] =
 
           {/* ── PROFIL ── */}
           <h3 className="text-2xl font-bold text-on-surface mb-1">{user?.name || 'User'}</h3>
-          <p className="text-xs text-slate-400 mb-1">{user?.email || '-'}</p>
           <p className="text-[10px] text-slate-300 font-bold uppercase tracking-widest mb-6">
             Bergabung {formatDate(user?.created_at)}
           </p>
@@ -464,7 +511,7 @@ const [confirmPassword, setConfirmPassword] =
               <p className="text-[9px] text-slate-400 font-bold uppercase leading-tight">Kulit</p>
             </div>
             <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-center">
-              <p className="text-lg font-bold text-primary">{savedList.length}</p>
+              <p className="text-lg font-bold text-primary">0</p>
               <p className="text-[9px] text-slate-400 font-bold uppercase leading-tight">Artikel</p>
             </div>
           </div>

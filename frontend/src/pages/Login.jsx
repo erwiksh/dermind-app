@@ -47,7 +47,11 @@ const Login = () => {
 
       alert("Login berhasil");
 
-      navigate("/dashboard");
+      if (response.data.data.user.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error) {
       alert(
         error.response?.data

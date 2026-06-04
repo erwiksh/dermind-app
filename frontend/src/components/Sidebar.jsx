@@ -5,6 +5,11 @@ const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [showConsultModal, setShowConsultModal] = useState(false); 
+  
+  const [user] = useState(() => {
+    const userJson = localStorage.getItem("user");
+    return userJson ? JSON.parse(userJson) : null;
+  });
 
   const menu = [
     { name: 'Dashboard', path: '/dashboard', icon: 'dashboard' },
@@ -12,9 +17,14 @@ const Sidebar = () => {
     { name: 'Community', path: '/community', icon: 'groups' },
     { name: 'AI Mental Health', path: '/mental', icon: 'psychology' },
     { name: 'AI Skin Detection', path: '/skin', icon: 'biotech' },
+    { name: 'AI Chatbot', path: '/chatbot', icon: 'smart_toy' },
     { name: 'Events', path: '/events', icon: 'calendar_month' },
     { name: 'Profile', path: '/profile', icon: 'person' },
   ];
+
+  if (user && user.role === 'admin') {
+    menu.push({ name: 'Admin Panel', path: '/admin', icon: 'admin_panel_settings' });
+  }
 
   const startConsult = (path) => {
     setShowConsultModal(false);
